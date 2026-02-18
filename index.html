@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindMapMe</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #cfefff, #fdfbfb);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .page { display: none; }
+    .active { display: block; }
+
+    .auth-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(to bottom, #c0e8f9, #fdfbfb);
+    }
+
+    .auth-box {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 2rem;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+
+    .auth-box input, .auth-box button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    .auth-box input {
+      border: 1px solid #ccc;
+    }
+
+    .auth-box button {
+      background-color: #00aaff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      background: rgba(0, 90, 110, 0.75);
+      color: white;
+      backdrop-filter: blur(8px);
+    }
+
+    .header-left, .header-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .header-center {
+      flex-grow: 1;
+      text-align: center;
+    }
+
+    .controls button {
+      padding: 0.5rem 1rem;
+      border: none;
+      background-color: #ffffff;
+      color: #005a6e;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .profile i {
+      font-size: 1.5rem;
+    }
+
+    .profile span {
+      font-size: 0.9rem;
+    }
+
+    #datetime {
+      position: absolute;
+      bottom: 10px;
+      left: 20px;
+      font-size: 0.85rem;
+      color: #333;
+    }
+
+    #canvas {
+      position: relative;
+      width: 100vw;
+      height: 85vh;
+      overflow: hidden;
+      background: url('static/naveen.png') no-repeat center center/cover;
+    }
+
+    .node {
+      position: absolute;
+      width: 160px;
+      height: 120px;
+      background: url('static/cloud.png') no-repeat center center/contain;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-weight: bold;
+      cursor: move;
+      user-select: none;
+      background-color: transparent;
+      border: none;
+    }
+
+    /* Rainbow Glowing Ring Toggle */
+    #chatToggle {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: conic-gradient(red, orange, yellow, green, blue, indigo, violet, red);
+      animation: rainbowRotate 3s linear infinite;
+      box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    #chatToggle::before {
+      content: "";
+      width: 45px;
+      height: 45px;
+      background: white url('static/ring-light.png') no-repeat center center/contain;
+      border-radius: 50%;
+    }
+
+    @keyframes rainbowRotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .chat-box {
+      position: absolute;
+      bottom: 90px;
+      right: 20px;
+      width: 300px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: all 0.3s ease-in-out;
+    }
+
+    .chat-box.hidden { display: none; }
+
+    .chat-log {
+      padding: 10px;
+      height: 200px;
+      overflow-y: auto;
+      color: #fff;
+    }
+
+    .chat-input {
+      display: flex;
+      border-top: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      outline: none;
+      background: rgba(255,255,255,0.1);
+      color: white;
+    }
+
+    .chat-input button {
+      background: rgba(0,90,110,0.7);
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Login Page -->
+  <div class="page active" id="loginPage">
+    <div class="auth-container">
+      <div class="auth-box">
+        <h2>🧠MINDMAPME</h2>
+        <input type="email" id="loginEmail" placeholder="Email">
+        <input type="password" id="loginPass" placeholder="Password">
+        <button onclick="login()">Login</button>
+        <p>Don't have an account? <a href="#" onclick="switchPage('signupPage')">Sign up</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Signup Page -->
+  <div class="page" id="signupPage">
+    <div class="auth-container">
+      <div class="auth-box">
+        <h2>🧠MINDMAPME</h2>
+        <input type="text" id="signupName" placeholder="Full Name">
+        <input type="email" id="signupEmail" placeholder="Email">
+        <input type="password" id="signupPass" placeholder="Password">
+        <button onclick="signup()">Sign Up</button>
+        <p>Already have an account? <a href="#" onclick="switchPage('loginPage')">Login</a></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dashboard Page -->
+  <div class="page" id="dashboardPage">
+    <header>
+      <div class="header-left controls">
+        <button onclick="createNode()">+ Add Node</button>
+        <button onclick="exportMap()">Export Map</button>
+        <button onclick="clearMap()">Clear</button>
+      </div>
+      <div class="header-center">
+        <h1>🧠 MINDMAPME</h1>
+      </div>
+      <div class="header-right profile">
+        <i class="fas fa-user-circle"></i>
+        <span id="profileEmail">user@example.com</span>
+      </div>
+    </header>
+
+    <div id="canvas"></div>
+    <div id="datetime"></div>
+
+    <!-- Rainbow Ring Toggle -->
+    <div id="chatToggle"></div>
+
+    <!-- Glassy Chat Box -->
+    <div class="chat-box hidden" id="chatBox">
+      <div class="chat-log" id="chatLog"></div>
+      <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Ask me something...">
+        <button onclick="chatBot()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    function switchPage(pageId) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageId).classList.add('active');
+    }
+
+    function login() {
+      const email = document.getElementById('loginEmail').value;
+      const pass = document.getElementById('loginPass').value;
+      if (email && pass) {
+        document.getElementById('profileEmail').innerText = email;
+        switchPage('dashboardPage');
+      } else {
+        alert('Enter valid email and password');
+      }
+    }
+
+    function signup() {
+      const name = document.getElementById('signupName').value;
+      const email = document.getElementById('signupEmail').value;
+      const pass = document.getElementById('signupPass').value;
+      if (name && email && pass) {
+        document.getElementById('profileEmail').innerText = email;
+        switchPage('dashboardPage');
+      } else {
+        alert('Fill all fields');
+      }
+    }
+
+    const canvas = document.getElementById('canvas');
+    const chatLog = document.getElementById('chatLog');
+    const userInput = document.getElementById('userInput');
+
+    function createNode() {
+      const node = document.createElement('div');
+      node.className = 'node';
+      node.contentEditable = true;
+      node.innerText = 'New Node';
+      node.style.left = Math.random() * (window.innerWidth - 200) + 'px';
+      node.style.top = Math.random() * (window.innerHeight - 250) + 'px';
+      node.setAttribute('draggable', true);
+
+      let offsetX, offsetY;
+      node.addEventListener('dragstart', (e) => {
+        offsetX = e.offsetX;
+        offsetY = e.offsetY;
+      });
+      node.addEventListener('dragend', (e) => {
+        node.style.left = e.pageX - offsetX + 'px';
+        node.style.top = e.pageY - offsetY + 'px';
+      });
+
+      canvas.appendChild(node);
+    }
+
+    function clearMap() {
+      canvas.innerHTML = '';
+    }
+
+    function exportMap() {
+      html2canvas(canvas).then(canvasExport => {
+        const link = document.createElement('a');
+        link.download = 'mindmap.png';
+        link.href = canvasExport.toDataURL();
+        link.click();
+      });
+    }
+
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('datetime').innerText = now.toLocaleString();
+      setTimeout(updateTime, 1000);
+    }
+    updateTime();
+
+    function chatBot() {
+      const userText = userInput.value.trim();
+      if (!userText) return;
+
+      const userMsg = document.createElement('div');
+      userMsg.innerText = 'You: ' + userText;
+      chatLog.appendChild(userMsg);
+
+      const responses = {
+        "why this project is unique": `🌟 Why This Project Is Unique:\nUnlike many typical portfolio projects, MindMapMe combines:\n✅ A fully interactive mind map editor\n✅ Basic user auth UI\n✅ A real-time AI assistant\n✅ Visual and UX enhancements\n🚀 This shows initiative in: product thinking, frontend dev, AI-UX`
+      };
+
+      const question = userText.toLowerCase().trim();
+      const botMsg = document.createElement('div');
+      botMsg.innerText = 'Assistant: ' + (responses[question] || 'Sorry, I could not respond.');
+      chatLog.appendChild(botMsg);
+      userInput.value = '';
+      chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    document.getElementById("chatToggle").addEventListener("click", () => {
+      document.getElementById("chatBox").classList.toggle("hidden");
+    });
+  </script>
+</body>
+</html>
