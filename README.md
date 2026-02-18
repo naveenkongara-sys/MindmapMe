@@ -35,7 +35,7 @@ MindMapMe is a modern web-based mind mapping tool that enables users to visually
 1. Clone the repository
 
 
-git clone https://github.com/your-username/mindmapme.git
+git clone https://github.com/naveenkongara-sys/MindmapMe.git
 
 
 2. Open the project folder
